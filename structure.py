@@ -29,7 +29,6 @@ totalMoves = 0
 RESET = True
 
 def getOpen():
-
     for i in range(3):
         for j in range(3):
             if not grid[i][j]:
@@ -124,34 +123,34 @@ class Cell(QLabel):
             winPos = checkTwoPair(COMPUTER)
             makeMove(winPos[0],winPos[1],COMPUTER)
             displayResult("Computer WINS!")
+
         elif checkTwoPair(PLAYER):
-            print "Condition 1"
             newPos = checkTwoPair(PLAYER)
             makeMove(newPos[0],newPos[1],COMPUTER)
+
         elif not grid[1][1] and [lastX,lastY] in sides:
-            print "Condition 2"
             makeMove(1,1,COMPUTER)
+
         elif [lastX,lastY] == [1,1]:
-            print "Condition 3"
             makeMove(abs(firstX-2),abs(firstY-2),COMPUTER)
+
         elif [lastX,lastY] in corners and  not grid[abs(lastX-2)][abs(lastY-2)]:
-            print "Condition 4"
             if COMPUTER in grid[lastX]:
                 makeMove(abs(lastX-1),abs(lastY-2),COMPUTER)
             else:
                 makeMove(abs(lastX-2),abs(lastY-1),COMPUTER)
+
         elif [lastX,lastY] == [abs(firstX-2),abs(firstY-2)] and not grid[1][1]:
-            print "Condition 5"
             makeMove(1,1,COMPUTER)
+
         elif not grid[abs(lastX-1)][abs(lastY-2)]:
-            print "Condition 6"
             makeMove(abs(lastX-1),abs(lastY-2),COMPUTER)
+
         elif not grid[abs(lastX-2)][abs(lastY-1)]:
-            print "Condition 7"
             makeMove(abs(lastX-2),abs(lastY-1),COMPUTER)
+
         else:
             empty = getOpen()
-            print empty
             makeMove(empty[0],empty[1],COMPUTER)
 
         if totalMoves == 9:
@@ -179,17 +178,10 @@ class Window(QMainWindow):
         self.divider.setFrameShadow(QFrame.Sunken)
         self.divider.setGeometry(240,30,20,201)
 
-        self.player_label = QLabel("Player :", self)
-        self.player_label.setGeometry(270,30,61,21)
-        self.player_symbol = QLabel(PLAYER,self)
-        self.player_symbol.setStyleSheet("color:"+color[PLAYER]+"; font-size:14pt; font-weight:700")
-        self.player_symbol.setGeometry(370,30,21,21)
-
-        self.computer_label = QLabel("Computer :", self)
-        self.computer_label.setGeometry(270,60,91,21)
-        self.computer_symbol = QLabel(COMPUTER,self)
-        self.computer_symbol.setStyleSheet("color:"+color[COMPUTER]+"; font-size:14pt; font-weight:700")
-        self.computer_symbol.setGeometry(370,60,21,21)
+        self.player_label = self.createLabel("Player :",270,30,61,21)
+        self.player_symbol = self.createLabel(PLAYER,370,30,21,21,"color:"+color[PLAYER]+"; font-size:14pt; font-weight:700")
+        self.computer_label = self.createLabel("Computer :",270,60,91,21)
+        self.computer_symbol = self.createLabel(COMPUTER,370,60,21,21,"color:"+color[COMPUTER]+"; font-size:14pt; font-weight:700")
 
         self.btn_quit = self.createButton("Quit",270,200,111,27)
         self.btn_new = self.createButton("New Game",270,170,111,27)
@@ -197,6 +189,13 @@ class Window(QMainWindow):
 
         self.setButtonActions()
         self.show()
+
+    def createLabel(self,name,x,y,l,b,style=""):
+        label = QLabel(name,self)
+        label.setGeometry(x,y,l,b)
+        if style:
+            label.setStyleSheet(style)
+        return label
 
     def createButton(self, text, offset_x,offset_y,dim_x,dim_y):
         btn = QPushButton(text, self)
@@ -223,7 +222,6 @@ class Window(QMainWindow):
 
         RESET = True
         totalMoves = 0
-
 
 app = QApplication(sys.argv)
 GUI = Window()

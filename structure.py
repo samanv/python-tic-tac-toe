@@ -3,6 +3,8 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import random
 
+global GUI
+
 grid = [['','',''],['','',''],['','','']]
 cell = [[],[],[]]
 
@@ -24,12 +26,7 @@ sides = [[0,1],[1,0],[1,2],[2,1]]
 corners = [[0,0],[0,2],[2,2],[2,0]]
 
 totalMoves = 0
-
-def gridFull():
-    if ('' not in grid[0]) and ('' not in grid[1]) and ('' not in grid[2]):
-        return True
-    else:
-        return False
+RESET = True
 
 def getOpen():
 
@@ -38,77 +35,46 @@ def getOpen():
             if not grid[i][j]:
                 return [i,j]
 
-def isThreat():
-
-    if grid[lastX].count(PLAYER)==2 and grid[lastX].count('')==1:
-        return 'R'
-
-    col = [grid[0][lastY],grid[1][lastY],grid[2][lastY]]
-    if col.count(PLAYER)==2 and col.count('')==1:
-        return 'C'
-
-    diag1 = [grid[0][0],grid[1][1],grid[2][2]]
-    if diag1.count(PLAYER)==2 and diag1.count('')==1:
-        return 'D1'
-
-    diag2 = [grid[0][2],grid[1][1],grid[2][0]]
-    if diag2.count(PLAYER)==2 and diag2.count('')==1:
-        return 'D2'
-
-    return False
-
-def removeThreat(pos):
-
-    global grid
-
-    if pos == 'R':
-        for i in range(3):
-            if not grid[lastX][i]:
-                grid[lastX][i] = COMPUTER
-                return [lastX,i]
-
-    elif pos == 'C':
-        for i in range(3):
-            if not grid[i][lastY]:
-                grid[i][lastY] = COMPUTER
-                return [i,lastY]
-
-    elif pos == 'D1':
-        for i in range(3):
-            if not grid[i][i]:
-                grid[i][i] = COMPUTER
-                return [i,i]
-
-    elif pos == 'D2':
-        for i in range(3):
-            if not grid[i][2-i]:
-                grid[i][2-i] = COMPUTER
-                return [i,2-i]
-
-def checkWin():
+def checkTwoPair(value):
 
     for i in range(3):
-        if grid[i].count(COMPUTER)==2 and grid[i].count('')==1:
+        if grid[i].count(value)==2 and grid[i].count('')==1:
             return [i,grid[i].index('')]
 
     for i in range(3):
         col = [grid[0][i],grid[1][i],grid[2][i]]
-        if col.count(COMPUTER)==2 and col.count('')==1:
+        if col.count(value)==2 and col.count('')==1:
             return [col.index(''),i]
 
     diag1 = [grid[0][0],grid[1][1],grid[2][2]]
-    if diag1.count(COMPUTER)==2 and diag1.count('')==1:
+    if diag1.count(value)==2 and diag1.count('')==1:
         return [diag1.index(''),diag1.index('')]
 
     diag2 = [grid[0][2],grid[1][1],grid[2][0]]
-    if diag2.count(COMPUTER)==2 and diag2.count('')==1:
+    if diag2.count(value)==2 and diag2.count('')==1:
         return [diag2.index(''),abs(diag2.index('')-2)]
 
     return False
 
 def makeMove(i,j,value):
+    global grid,cell
     grid[i][j] = value
     cell[i][j].changeTo(value)
+
+def makeFirstMove():
+    global RESET,lastX,lastY,firstX,firstY
+    if RESET:
+        lastX = random.choice([0,2])
+        lastY = random.choice([0,2])
+        firstX = lastX
+        firstY = lastY
+        makeMove(lastX,lastY,COMPUTER)
+        RESET = False
+    else:
+        return
+
+def displayResult(message):
+    GUI.showMessage(message)
 
 class Cell(QLabel):
 
@@ -137,7 +103,7 @@ class Cell(QLabel):
             grid[self.i][self.j] = value
             self.set = True
         else:
-            pass
+            return
 
     def reset(self):
         self.label.setStyleSheet("background-color:#CCC;")
@@ -148,43 +114,48 @@ class Cell(QLabel):
     def clicked(self,event):
         if self.set:
             return
+
         self.changeTo(PLAYER)
         global lastX, lastY, cell
         lastX = self.i
         lastY = self.j
-        threat = isThreat()
-        if checkWin():
-            winPos = checkWin()
+
+        if checkTwoPair(COMPUTER):
+            winPos = checkTwoPair(COMPUTER)
             makeMove(winPos[0],winPos[1],COMPUTER)
-            print "COMPUTER Wins"
-        elif threat:
-            newPos = removeThreat(threat)
-            cell[newPos[0]][newPos[1]].changeTo(COMPUTER)
+            displayResult("Computer WINS!")
+        elif checkTwoPair(PLAYER):
+            print "Condition 1"
+            newPos = checkTwoPair(PLAYER)
+            makeMove(newPos[0],newPos[1],COMPUTER)
         elif not grid[1][1] and [lastX,lastY] in sides:
+            print "Condition 2"
             makeMove(1,1,COMPUTER)
         elif [lastX,lastY] == [1,1]:
+            print "Condition 3"
             makeMove(abs(firstX-2),abs(firstY-2),COMPUTER)
         elif [lastX,lastY] in corners and  not grid[abs(lastX-2)][abs(lastY-2)]:
+            print "Condition 4"
             if COMPUTER in grid[lastX]:
-                makeMove(abs(firstX-1),abs(firstY-2),COMPUTER)
+                makeMove(abs(lastX-1),abs(lastY-2),COMPUTER)
             else:
-                makeMove(abs(firstX-2),abs(firstY-1),COMPUTER)
-        elif [lastX,lastY] == [abs(firstX-2),abs(firstY-2)]:
+                makeMove(abs(lastX-2),abs(lastY-1),COMPUTER)
+        elif [lastX,lastY] == [abs(firstX-2),abs(firstY-2)] and not grid[1][1]:
+            print "Condition 5"
             makeMove(1,1,COMPUTER)
         elif not grid[abs(lastX-1)][abs(lastY-2)]:
-            makeMove(abs(firstX-1),abs(firstY-2),COMPUTER)
+            print "Condition 6"
+            makeMove(abs(lastX-1),abs(lastY-2),COMPUTER)
         elif not grid[abs(lastX-2)][abs(lastY-1)]:
-            makeMove(abs(firstX-2),abs(firstY-1),COMPUTER)
+            print "Condition 7"
+            makeMove(abs(lastX-2),abs(lastY-1),COMPUTER)
         else:
-            print "OPEN"
             empty = getOpen()
             print empty
             makeMove(empty[0],empty[1],COMPUTER)
 
-        print totalMoves
-
         if totalMoves == 9:
-            print "Its a DRAW!"
+            displayResult("Its a DRAW!")
 
 class Window(QMainWindow):
 
@@ -235,22 +206,25 @@ class Window(QMainWindow):
     def setButtonActions(self):
         self.btn_quit.clicked.connect(QCoreApplication.instance().quit)
         self.btn_new.clicked.connect(self.resetAll)
+        self.btn_start.clicked.connect(makeFirstMove)
+
+    def showMessage(self,message):
+        choice = QMessageBox.information(self, 'Game Over', message, QMessageBox.Ok)
+        if choice == QMessageBox.Ok:
+            self.resetAll()
 
     def resetAll(self):
-        for row in cell:
-            for c in row:
-                c.reset()
+        global RESET,totalMoves,grid,cell
 
-        for row in grid:
-            for x in row:
-                x = ""
+        for i in range(3):
+            for j in range(3):
+                cell[i][j].reset()
+                grid[i][j] = ''
+
+        RESET = True
+        totalMoves = 0
+
 
 app = QApplication(sys.argv)
 GUI = Window()
-lastX = random.choice([0,2])
-lastY = random.choice([0,2])
-firstX = lastX
-firstY = lastY
-grid[lastX][lastY] = COMPUTER
-cell[lastX][lastY].changeTo(COMPUTER)
 sys.exit(app.exec_())
